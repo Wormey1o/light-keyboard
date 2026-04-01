@@ -7,6 +7,13 @@ import androidx.compose.ui.platform.AbstractComposeView
 class Lp3KeyboardView(context: Context) : AbstractComposeView(context) {
     @Composable
     override fun Content() {
-        Lp3Keyboard()
+        Lp3Keyboard(
+            LowerCaseLayout,
+            KeyboardOptions(
+                emptyList(),
+                displayClose = true,
+                displayReturn = true
+            )
+        )
     }
 }
