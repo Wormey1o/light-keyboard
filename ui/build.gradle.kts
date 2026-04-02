@@ -1,7 +1,13 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    `maven-publish`
 }
+
+// for publishing
+val uiVersion = "0.0.1"
 
 android {
     namespace = "com.thelightphone.lp3Keyboard.ui"
@@ -30,6 +36,40 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+android.publishing {
+    singleVariant("release") {
+        withSourcesJar()
+    }
+}
+
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = "com.thelightphone.lp3keyboard"
+            artifactId = "ui"
+            version = uiVersion
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/lightphone/light-keyboard")
+            credentials {
+                username = localProperties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = localProperties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
