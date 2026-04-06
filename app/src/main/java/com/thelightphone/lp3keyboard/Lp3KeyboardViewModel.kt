@@ -26,7 +26,10 @@ interface Lp3RepeatableKeyboardCallback : Lp3KeyboardCallback {
     fun onSpecialKeyRepeated(specialKey: SpecialKey)
 }
 
-class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKeyboardCallback) : ViewModel(),
+class DefaultLp3KeyboardViewModel(
+    private val delegateCallback: Lp3RepeatableKeyboardCallback,
+    private val haptic: () -> Unit = {}
+) : ViewModel(),
     Lp3KeyboardViewModel {
     override val layoutFlow: MutableStateFlow<Layout> = MutableStateFlow(LowerCaseLayout)
     override val optionsFlow: StateFlow<KeyboardOptions> = MutableStateFlow(
@@ -56,9 +59,13 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
         }
     }
 
-    override fun onKeyPressed(code: Int) = delegateCallback.onKeyPressed(code)
+    override fun onKeyPressed(code: Int) {
+        haptic()
+        delegateCallback.onKeyPressed(code)
+    }
 
     override fun onSpecialKeyPressed(key: SpecialKey) {
+        haptic()
         delegateCallback.onSpecialKeyPressed(key)
     }
 
@@ -109,6 +116,7 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
     }
 
     override fun onKeyLongPressed(code: Int) {
+        haptic()
         delegateCallback.onKeyLongPressed(code)
         heldKeys[code]?.cancel()
         heldKeys[code] = viewModelScope.launch {
@@ -129,6 +137,7 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
             }
             else -> true
         }
+        haptic()
         delegateCallback.onSpecialKeyLongPressed(key)
         if (allowRepeats) {
             heldSpecialKeys[key]?.cancel()

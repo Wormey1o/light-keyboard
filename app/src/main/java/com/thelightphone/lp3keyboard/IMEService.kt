@@ -25,7 +25,7 @@ class IMEService : LifecycleInputMethodService(),
         val factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return DefaultLp3KeyboardViewModel(this@IMEService) as T
+                return DefaultLp3KeyboardViewModel(this@IMEService, ::tick) as T
             }
         }
         ViewModelProvider(store, factory)[DefaultLp3KeyboardViewModel::class.java]
@@ -79,7 +79,6 @@ class IMEService : LifecycleInputMethodService(),
     }
 
     override fun onKeyPressed(code: Int) {
-        tick()
     }
 
     override fun onSpecialKeyPressed(key: SpecialKey) {
@@ -91,7 +90,6 @@ class IMEService : LifecycleInputMethodService(),
 
             else -> {}
         }
-        tick()
     }
 
     override fun onKeyReleased(code: Int) {
@@ -107,13 +105,15 @@ class IMEService : LifecycleInputMethodService(),
                 updateCapsMode()
             }
 
+            SpecialKey.Return -> {
+                currentInputConnection?.commitText("\n", 1)
+            }
+
             else -> {}
         }
-        tick()
     }
 
     override fun onKeyLongPressed(code: Int) {
-        tick()
     }
 
     override fun onSpecialKeyLongPressed(key: SpecialKey) {
@@ -132,7 +132,6 @@ class IMEService : LifecycleInputMethodService(),
 
             else -> {}
         }
-        tick()
     }
 
     override fun onKeyRepeated(code: Int) {
