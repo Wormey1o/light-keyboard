@@ -1,6 +1,5 @@
 package com.thelightphone.lp3keyboard
 
-import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -84,18 +83,20 @@ class IMEService : LifecycleInputMethodService(),
     }
 
     override fun onSpecialKeyPressed(key: SpecialKey) {
-        when(key) {
+        when (key) {
             SpecialKey.Space -> {
                 currentInputConnection?.commitText(" ", 1)
                 updateCapsMode()
             }
+
             else -> {}
         }
         tick()
     }
 
     override fun onKeyReleased(code: Int) {
-        currentInputConnection?.commitText(Char(code).toString(), 1)
+        val text = buildString { appendCodePoint(code) }
+        currentInputConnection?.commitText(text, 1)
         updateCapsMode()
     }
 
@@ -105,8 +106,10 @@ class IMEService : LifecycleInputMethodService(),
                 currentInputConnection?.deleteSurroundingText(1, 0)
                 updateCapsMode()
             }
+
             else -> {}
         }
+        tick()
     }
 
     override fun onKeyLongPressed(code: Int) {
@@ -126,6 +129,7 @@ class IMEService : LifecycleInputMethodService(),
                 ic.deleteSurroundingText(charsToDelete, 0)
                 updateCapsMode()
             }
+
             else -> {}
         }
         tick()
@@ -136,11 +140,12 @@ class IMEService : LifecycleInputMethodService(),
     }
 
     override fun onSpecialKeyRepeated(specialKey: SpecialKey) {
-        when(specialKey) {
+        when (specialKey) {
             SpecialKey.Space -> {
                 currentInputConnection?.commitText(" ", 1)
                 updateCapsMode()
             }
+
             else -> {}
         }
     }

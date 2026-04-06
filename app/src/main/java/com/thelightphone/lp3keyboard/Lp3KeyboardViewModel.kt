@@ -2,14 +2,19 @@ package com.thelightphone.lp3keyboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.thelightphone.lp3Keyboard.ui.CapsLockedLayout
 import com.thelightphone.lp3Keyboard.ui.CapsMode
+import com.thelightphone.lp3Keyboard.ui.EmojiLayout
 import com.thelightphone.lp3Keyboard.ui.KeyboardOptions
 import com.thelightphone.lp3Keyboard.ui.Layout
 import com.thelightphone.lp3Keyboard.ui.LowerCaseLayout
 import com.thelightphone.lp3Keyboard.ui.Lp3KeyboardCallback
 import com.thelightphone.lp3Keyboard.ui.Lp3KeyboardViewModel
+import com.thelightphone.lp3Keyboard.ui.NumberLayout
 import com.thelightphone.lp3Keyboard.ui.SpecialKey
+import com.thelightphone.lp3Keyboard.ui.SymbolsLayout
 import com.thelightphone.lp3Keyboard.ui.UpperCaseLayout
+import com.thelightphone.lp3Keyboard.ui.defaultEmojis
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +31,7 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
     override val layoutFlow: MutableStateFlow<Layout> = MutableStateFlow(LowerCaseLayout)
     override val optionsFlow: StateFlow<KeyboardOptions> = MutableStateFlow(
         KeyboardOptions(
-            emptyList(),
+            defaultEmojis,
             true,
             true,
             true
@@ -43,11 +48,11 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
     var capsMode: CapsMode = CapsMode.Off
         private set
 
-    private fun applyLayout() {
+    private fun showAlphabetLayout() {
         layoutFlow.value = when (capsMode) {
             CapsMode.Off -> LowerCaseLayout
-            CapsMode.Single -> UpperCaseLayout(capsLocked = false)
-            CapsMode.Locked -> UpperCaseLayout(capsLocked = true)
+            CapsMode.Single -> UpperCaseLayout
+            CapsMode.Locked -> CapsLockedLayout
         }
     }
 
@@ -73,9 +78,21 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
                     CapsMode.Off -> CapsMode.Single
                     CapsMode.Single, CapsMode.Locked -> CapsMode.Off
                 }
-                applyLayout()
+                showAlphabetLayout()
             }
-            else -> {}
+            SpecialKey.Numbers -> {
+                layoutFlow.value = NumberLayout
+            }
+            SpecialKey.Letters, SpecialKey.Close -> {
+                showAlphabetLayout()
+            }
+            SpecialKey.Symbols -> {
+                layoutFlow.value = SymbolsLayout
+            }
+            SpecialKey.Emojis -> {
+                layoutFlow.value = EmojiLayout
+            }
+            else -> {/*TODO*/}
         }
         delegateCallback.onSpecialKeyReleased(key)
     }
@@ -84,7 +101,11 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
     fun setCapsMode(enabled: Boolean) {
         if (capsMode == CapsMode.Locked) return
         capsMode = if (enabled) CapsMode.Single else CapsMode.Off
-        applyLayout()
+        when(layoutFlow.value) {
+            // only update the layout if we were already showing letters
+            LowerCaseLayout, UpperCaseLayout, CapsLockedLayout -> showAlphabetLayout()
+            else -> {}
+        }
     }
 
     override fun onKeyLongPressed(code: Int) {
@@ -99,19 +120,23 @@ class DefaultLp3KeyboardViewModel(private val delegateCallback: Lp3RepeatableKey
     }
 
     override fun onSpecialKeyLongPressed(key: SpecialKey) {
-        when (key) {
+        val allowRepeats = when (key) {
             SpecialKey.UpCase, SpecialKey.DownCase -> {
                 capsMode = if (capsMode == CapsMode.Locked) CapsMode.Off else CapsMode.Locked
-                applyLayout()
+                showAlphabetLayout()
+                // don't allow repeats since we switched layouts and the original button is gone
+                false
             }
-            else -> {}
+            else -> true
         }
         delegateCallback.onSpecialKeyLongPressed(key)
-        heldSpecialKeys[key]?.cancel()
-        heldSpecialKeys[key] = viewModelScope.launch {
-            while (true) {
-                delay(REPEAT_INTERVAL_MS)
-                delegateCallback.onSpecialKeyRepeated(key)
+        if (allowRepeats) {
+            heldSpecialKeys[key]?.cancel()
+            heldSpecialKeys[key] = viewModelScope.launch {
+                while (true) {
+                    delay(REPEAT_INTERVAL_MS)
+                    delegateCallback.onSpecialKeyRepeated(key)
+                }
             }
         }
     }

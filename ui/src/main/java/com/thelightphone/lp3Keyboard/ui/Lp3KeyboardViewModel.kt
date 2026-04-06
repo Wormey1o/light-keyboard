@@ -7,4 +7,31 @@ interface Lp3KeyboardViewModel : Lp3KeyboardCallback {
     val optionsFlow: StateFlow<KeyboardOptions>
 }
 
+val defaultEmojis = listOf(
+    "😅",
+    "😅",
+    "🙃",
+    "😍",
+    "😜",
+    "😂",
+    "😭",
+    "😎",
+    "🙌",
+    "👍",
+    "👎",
+    "🤞",
+    "✌️",
+    "👌",
+    "👋",
+    "🙏",
+    "✨",
+    "🔥",
+    "❤️",
+    "💔",
+    "🏆",
+    "🎯",
+    "👑",
+    "👀"
+).map { it.codePointAt(0) }
+
 enum class CapsMode { Off, Single, Locked }

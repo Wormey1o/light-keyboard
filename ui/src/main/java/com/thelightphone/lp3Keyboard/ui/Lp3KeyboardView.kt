@@ -16,7 +16,7 @@ open class Lp3RawKeyboardView @JvmOverloads constructor(
     var displayClose: Boolean by mutableStateOf(true)
     var displayReturn: Boolean by mutableStateOf(true)
     var displayVoice: Boolean by mutableStateOf(true)
-    var emojis: List<Emoji>? by mutableStateOf(emptyList())
+    var emojis: List<Emoji>? by mutableStateOf(defaultEmojis)
     var layout: Layout by mutableStateOf(LowerCaseLayout)
 
     @Composable
@@ -40,6 +40,6 @@ class Lp3KeyboardView(context: Context, private val viewModel: Lp3KeyboardViewMo
 
     @Composable
     override fun Content() {
-        Lp3Keyboard(viewModel)
+        Lp3KeyboardExtended(viewModel)
     }
 }

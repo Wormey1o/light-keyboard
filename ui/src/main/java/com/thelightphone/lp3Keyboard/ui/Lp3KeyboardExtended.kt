@@ -1,0 +1,65 @@
+package com.thelightphone.lp3Keyboard.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+
+/*
+For using the keyboard outside LightOS. LightOS adds additional UI surrounding the keyboard
+that technically controls it. For example, when the Emoji keyboard is showing, LightOS inserts a
+"close" button at the bottom that sets the keyboard back to "letters" when pressed. This replicates
+that functionality until it is fully replaced within LightOS
+ */
+
+@Composable
+fun Lp3KeyboardExtended(viewModel: Lp3KeyboardViewModel) {
+    val layout by viewModel.layoutFlow.collectAsState()
+    val options by viewModel.optionsFlow.collectAsState()
+    Lp3KeyboardExtended(layout, options, viewModel)
+}
+
+@Composable
+fun Lp3KeyboardExtended(layout: Layout, options: KeyboardOptions, callback: Lp3KeyboardCallback) {
+    val showClose = when (layout) {
+        EmojiLayout -> true
+        else -> false
+    }
+    Column(Modifier.fillMaxWidth().height((LP3_KEYBOARD_HEIGHT_DP + 36).dp).background(Color.Black).padding(top=10.dp)) {
+        Lp3Keyboard(layout, options, callback)
+        Row(
+            Modifier.weight(1f).fillMaxWidth().background(Color.Black),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (showClose) {
+                Button(
+                    onClick = { callback.onSpecialKeyReleased(SpecialKey.Close) },
+                    contentPadding = PaddingValues(bottom = 14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color.Transparent,
+                        contentColor = Color.White,
+                    )
+                ) {
+                    Icon(
+                        painterResource(R.drawable.down_lp3),
+                        "Close"
+                    )
+                }
+            }
+        }
+    }
+}
