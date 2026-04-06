@@ -11,10 +11,12 @@ import com.thelightphone.lp3Keyboard.ui.LowerCaseLayout
 import com.thelightphone.lp3Keyboard.ui.Lp3KeyboardCallback
 import com.thelightphone.lp3Keyboard.ui.Lp3KeyboardViewModel
 import com.thelightphone.lp3Keyboard.ui.NumberLayout
+import com.thelightphone.lp3Keyboard.ui.SpecialCharKeyboard
 import com.thelightphone.lp3Keyboard.ui.SpecialKey
 import com.thelightphone.lp3Keyboard.ui.SymbolsLayout
 import com.thelightphone.lp3Keyboard.ui.UpperCaseLayout
 import com.thelightphone.lp3Keyboard.ui.defaultEmojis
+import com.thelightphone.lp3Keyboard.ui.specialCharMapping
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +33,15 @@ class DefaultLp3KeyboardViewModel(
     private val haptic: () -> Unit = {}
 ) : ViewModel(),
     Lp3KeyboardViewModel {
+    var previousLayout: Layout? = null
+        private set
+
     override val layoutFlow: MutableStateFlow<Layout> = MutableStateFlow(LowerCaseLayout)
+
+    private fun setLayout(layout: Layout) {
+        previousLayout = layoutFlow.value
+        layoutFlow.value = layout
+    }
     override val optionsFlow: StateFlow<KeyboardOptions> = MutableStateFlow(
         KeyboardOptions(
             defaultEmojis,
@@ -47,16 +57,15 @@ class DefaultLp3KeyboardViewModel(
 
     private val heldSpecialKeys = mutableMapOf<SpecialKey, Job>()
     private val heldKeys = mutableMapOf<Int, Job>()
-
     var capsMode: CapsMode = CapsMode.Off
         private set
 
     private fun showAlphabetLayout() {
-        layoutFlow.value = when (capsMode) {
+        setLayout(when (capsMode) {
             CapsMode.Off -> LowerCaseLayout
             CapsMode.Single -> UpperCaseLayout
             CapsMode.Locked -> CapsLockedLayout
-        }
+        })
     }
 
     override fun onKeyPressed(code: Int) {
@@ -71,6 +80,10 @@ class DefaultLp3KeyboardViewModel(
 
     override fun onKeyReleased(code: Int) {
         heldKeys.remove(code)?.cancel()
+        // auto-dismiss when a special key is typed
+        if (layoutFlow.value is SpecialCharKeyboard) {
+            setLayout(previousLayout ?: LowerCaseLayout)
+        }
         delegateCallback.onKeyReleased(code)
     }
 
@@ -88,16 +101,16 @@ class DefaultLp3KeyboardViewModel(
                 showAlphabetLayout()
             }
             SpecialKey.Numbers -> {
-                layoutFlow.value = NumberLayout
+                setLayout(NumberLayout)
             }
             SpecialKey.Letters, SpecialKey.Close -> {
                 showAlphabetLayout()
             }
             SpecialKey.Symbols -> {
-                layoutFlow.value = SymbolsLayout
+                setLayout(SymbolsLayout)
             }
             SpecialKey.Emojis -> {
-                layoutFlow.value = EmojiLayout
+                setLayout(EmojiLayout)
             }
             else -> {/*TODO*/}
         }
@@ -116,9 +129,13 @@ class DefaultLp3KeyboardViewModel(
     }
 
     override fun onKeyLongPressed(code: Int) {
-        haptic()
-        delegateCallback.onKeyLongPressed(code)
         heldKeys[code]?.cancel()
+        if (specialCharMapping.containsKey(code)) {
+            haptic()
+            setLayout(SpecialCharKeyboard(code))
+            return
+        }
+        delegateCallback.onKeyLongPressed(code)
         heldKeys[code] = viewModelScope.launch {
             while (true) {
                 delay(REPEAT_INTERVAL_MS)

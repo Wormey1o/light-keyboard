@@ -244,15 +244,21 @@ data class KeyboardOptions(
     val displayReturn: Boolean,
     val displayVoice: Boolean
 )
-
 @Composable
-fun ColumnScope.FirstRow(characters: String, callback: Lp3KeyboardCallback) {
+fun ColumnScope.DefaultRow(height: Dp, content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(STANDARD_ROW_HEIGHT_DP.dp),
+            .height(height),
         horizontalArrangement = Arrangement.Center,
-    ) {
+        content = content
+    )
+}
+
+
+@Composable
+fun ColumnScope.FirstRow(characters: String, callback: Lp3KeyboardCallback) {
+    DefaultRow(STANDARD_ROW_HEIGHT_DP.dp) {
         for (char in characters) {
             Key(char, callback)
         }
@@ -271,12 +277,7 @@ fun ColumnScope.ThirdRow(
     callback: Lp3KeyboardCallback,
     leftButton: @Composable RowScope.() -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(STANDARD_ROW_HEIGHT_DP.dp),
-        horizontalArrangement = Arrangement.Center,
-    ) {
+    DefaultRow(STANDARD_ROW_HEIGHT_DP.dp) {
         leftButton()
         if (characters.length == 5) {
             // currently this row only has 5 or 7 chars, so add some space if there are 5
@@ -304,7 +305,6 @@ fun ColumnScope.FinalRow(
     callback: Lp3KeyboardCallback,
     leftButton: @Composable RowScope.() -> Unit
 ) {
-    // TODO take in left-most button
     Row(
         modifier = Modifier
             .fillMaxWidth()

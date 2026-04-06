@@ -101,7 +101,10 @@ class IMEService : LifecycleInputMethodService(),
     override fun onSpecialKeyReleased(key: SpecialKey) {
         when (key) {
             SpecialKey.Backspace -> {
-                currentInputConnection?.deleteSurroundingText(1, 0)
+                val ic = currentInputConnection ?: return
+                val before = ic.getTextBeforeCursor(1, 0)
+                val charsToDelete = if (before != null && before.isNotEmpty() && Character.isLowSurrogate(before[0])) 2 else 1
+                ic.deleteSurroundingText(charsToDelete, 0)
                 updateCapsMode()
             }
 

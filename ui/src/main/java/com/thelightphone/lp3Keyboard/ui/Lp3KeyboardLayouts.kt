@@ -1,10 +1,6 @@
 package com.thelightphone.lp3Keyboard.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -127,12 +123,7 @@ object EmojiLayout : Layout {
         // current layout supports 3 rows of 8
         val emojiRows = options.emojis?.chunked(8)?.take(3) ?: return
         for (row in emojiRows) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(STANDARD_ROW_HEIGHT_DP.dp),
-                horizontalArrangement = Arrangement.Center,
-            ) {
+            DefaultRow(STANDARD_ROW_HEIGHT_DP.dp) {
                 for (emoji in row) {
                     Key(emoji, callback, width = MEDIUM_KEY_WIDTH_DP.dp)
                 }
@@ -140,3 +131,91 @@ object EmojiLayout : Layout {
         }
     }
 }
+
+class SpecialCharKeyboard(rootCode: Int) : Layout {
+    private val rows = specialCharMapping[rootCode]
+    @Composable
+    override fun ColumnScope.Render(
+        options: KeyboardOptions,
+        callback: Lp3KeyboardCallback
+    ) {
+        rows?.forEach { row ->
+            DefaultRow(STANDARD_ROW_HEIGHT_DP.dp) {
+                for (char in row) {
+                    Key(char.code, callback, width = MEDIUM_KEY_WIDTH_DP.dp)
+                }
+            }
+        }
+    }
+}
+
+val specialCharMapping = mapOf(
+    'A'.code to listOf(
+        listOf('À', 'Á', 'Â', 'Ä', 'Æ'),
+        listOf('Ã', 'Å', 'Ā', 'Ă', 'Ą'),
+    ),
+    'a'.code to listOf(
+        listOf('à', 'á', 'â', 'ä', 'æ'),
+        listOf('ã', 'å', 'ā', 'ă', 'ą'),
+    ),
+    'C'.code to listOf(
+        listOf('Ç', 'Ć', 'Č'),
+    ),
+    'c'.code to listOf(
+        listOf('ç', 'ć', 'č'),
+    ),
+    'E'.code to listOf(
+        listOf('È', 'É', 'Ê', 'Ë', 'Ē', 'Ė', 'Ę'),
+    ),
+    'e'.code to listOf(
+        listOf('è', 'é', 'ê', 'ë', 'ē', 'ė', 'ę'),
+    ),
+    'I'.code to listOf(
+        listOf('Î', 'Ï', 'Í', 'Ī', 'Į', 'Ì'),
+    ),
+    'i'.code to listOf(
+        listOf('î', 'ï', 'í', 'ī', 'į', 'ì'),
+    ),
+    'L'.code to listOf(
+        listOf('Ł'),
+    ),
+    'l'.code to listOf(
+        listOf('ł'),
+    ),
+    'N'.code to listOf(
+        listOf('Ñ', 'Ń'),
+    ),
+    'n'.code to listOf(
+        listOf('ñ', 'ń'),
+    ),
+    'O'.code to listOf(
+        listOf('Ô', 'Ö', 'Ò', 'Ó', 'Œ', 'Ø', 'Ō', 'Õ'),
+    ),
+    'o'.code to listOf(
+        listOf('ô', 'ö', 'ò', 'ó', 'œ', 'ø', 'ō', 'õ'),
+    ),
+    'S'.code to listOf(
+        listOf('ẞ', 'Ś', 'Š'),
+    ),
+    's'.code to listOf(
+        listOf('ß', 'ś', 'š'),
+    ),
+    'U'.code to listOf(
+        listOf('Û', 'Ü', 'Ù', 'Ú', 'Ū'),
+    ),
+    'u'.code to listOf(
+        listOf('û', 'ü', 'ù', 'ú', 'ū'),
+    ),
+    'Y'.code to listOf(
+        listOf('Ÿ'),
+    ),
+    'y'.code to listOf(
+        listOf('ÿ'),
+    ),
+    'Z'.code to listOf(
+        listOf('Ž', 'Ź', 'Ż'),
+    ),
+    'z'.code to listOf(
+        listOf('ž', 'ź', 'ż'),
+    ),
+)

@@ -36,7 +36,7 @@ fun Lp3KeyboardExtended(viewModel: Lp3KeyboardViewModel) {
 @Composable
 fun Lp3KeyboardExtended(layout: Layout, options: KeyboardOptions, callback: Lp3KeyboardCallback) {
     val showClose = when (layout) {
-        EmojiLayout -> true
+        EmojiLayout, is SpecialCharKeyboard -> true
         else -> false
     }
     val colors = LocalKeyboardColors.current
