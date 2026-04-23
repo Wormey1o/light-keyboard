@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
@@ -26,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -187,15 +187,18 @@ fun RowScope.Key(
             },
         contentAlignment = Alignment.Center
     ) {
-        val fontSize = if (pressed) (STANDARD_KEY_TEXT_SP + 6).sp else STANDARD_KEY_TEXT_SP.sp
-        val offsetY = if (pressed) (-12).dp else 0.dp
         Text(
             text = buildString { appendCodePoint(code) },
             color = LocalKeyboardColors.current.foreground,
             fontFamily = akkuratFamily,
             fontWeight = FontWeight.Normal,
-            fontSize = fontSize,
-            modifier = Modifier.offset(y = offsetY)
+            fontSize = STANDARD_KEY_TEXT_SP.sp,
+            modifier = Modifier.graphicsLayer {
+                val isPressed = pressed  // state read happens at draw time
+                scaleX = if (isPressed) 1.25f else 1f
+                scaleY = if (isPressed) 1.25f else 1f
+                translationY = if (isPressed) -12.dp.toPx() else 0f
+            }
         )
     }
 }
