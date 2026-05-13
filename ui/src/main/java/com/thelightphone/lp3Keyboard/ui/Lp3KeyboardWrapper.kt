@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /*
@@ -51,7 +53,7 @@ fun Lp3KeyboardWrapper(layout: Layout, options: KeyboardOptions, callback: Lp3Ke
         ) {
             Button(
                 onClick = { callback.onSpecialKeyReleased(SpecialKey.Close) },
-                contentPadding = PaddingValues(bottom = 14.dp),
+                contentPadding = PaddingValues(bottom = 10.dp, top = 4.dp),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Transparent,
                     contentColor = colors.foreground,
@@ -62,6 +64,21 @@ fun Lp3KeyboardWrapper(layout: Layout, options: KeyboardOptions, callback: Lp3Ke
                     "Close"
                 )
             }
+        }
+    }
+}
+
+@Preview(name = "Wrapper", widthDp = (1080 / 3), heightDp = (1240 / 3))
+@Composable
+fun Lp3KeyboardWrapperPreview() {
+    Lp3KeyboardTheme(DarkKeyboardColors) {
+        Column(verticalArrangement = Arrangement.Bottom, modifier = Modifier.fillMaxSize()) {
+            val options = KeyboardOptions(defaultEmojis,
+                displayClose = true,
+                displayReturn = true,
+                displayVoice = true
+            )
+            Lp3KeyboardWrapper(UpperCaseLayout, options, previewCallback)
         }
     }
 }

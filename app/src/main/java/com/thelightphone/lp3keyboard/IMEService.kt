@@ -49,6 +49,11 @@ class IMEService : LifecycleInputMethodService(),
         savedStateRegistryController.performRestore(null)
     }
 
+    override fun onDestroy() {
+        store.clear()
+        super.onDestroy()
+    }
+
     override val viewModelStore: ViewModelStore
         get() = store
     override val lifecycle: Lifecycle
@@ -65,6 +70,11 @@ class IMEService : LifecycleInputMethodService(),
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
 
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
+
+    override fun onWindowHidden() {
+        super.onWindowHidden()
+        viewModel.cancelHeldKeys()
+    }
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
@@ -124,18 +134,22 @@ class IMEService : LifecycleInputMethodService(),
     override fun onKeyLongPressed(code: Int) {
     }
 
+    private fun deletePrecedingWord() {
+        val ic = currentInputConnection ?: return
+        // Get text before cursor to find the word boundary (max 100 chars long)
+        val before = ic.getTextBeforeCursor(100, 0) ?: return
+        val trimmed = before.trimEnd()
+        val lastSpace = trimmed.indexOfLast { it.isWhitespace() }
+        // Delete from cursor back to start of word (including trailing spaces)
+        val charsToDelete = before.length - (if (lastSpace >= 0) lastSpace + 1 else 0)
+        ic.deleteSurroundingText(charsToDelete, 0)
+        updateCapsMode()
+    }
+
     override fun onSpecialKeyLongPressed(key: SpecialKey) {
         when (key) {
             SpecialKey.Backspace -> {
-                val ic = currentInputConnection ?: return
-                // Get text before cursor to find the word boundary (max 100 chars long)
-                val before = ic.getTextBeforeCursor(100, 0) ?: return
-                val trimmed = before.trimEnd()
-                val lastSpace = trimmed.indexOfLast { it.isWhitespace() }
-                // Delete from cursor back to start of word (including trailing spaces)
-                val charsToDelete = before.length - (if (lastSpace >= 0) lastSpace + 1 else 0)
-                ic.deleteSurroundingText(charsToDelete, 0)
-                updateCapsMode()
+                deletePrecedingWord()
             }
 
             else -> {}
@@ -143,7 +157,7 @@ class IMEService : LifecycleInputMethodService(),
     }
 
     override fun onKeyRepeated(code: Int) {
-        println("LP3 REPATED $code")
+        onKeyReleased(code)
     }
 
     override fun onSpecialKeyRepeated(specialKey: SpecialKey) {
@@ -151,6 +165,9 @@ class IMEService : LifecycleInputMethodService(),
             SpecialKey.Space -> {
                 currentInputConnection?.commitText(" ", 1)
                 updateCapsMode()
+            }
+            SpecialKey.Backspace -> {
+                deletePrecedingWord()
             }
 
             else -> {}

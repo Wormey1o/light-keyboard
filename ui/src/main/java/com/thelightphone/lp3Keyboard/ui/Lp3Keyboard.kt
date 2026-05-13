@@ -2,8 +2,10 @@ package com.thelightphone.lp3Keyboard.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +39,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 
 enum class SpecialKey {
     UpCase,
@@ -83,6 +87,30 @@ fun Lp3Keyboard(layout: Layout, options: KeyboardOptions, callback: Lp3KeyboardC
     }
 }
 
+fun Modifier.keyInput(
+    inputKey: Any?,
+    onPressed: () -> Unit,
+    onReleased: () -> Unit,
+    onLongPressed: () -> Unit,
+    onPressedChanged: (Boolean) -> Unit
+) = pointerInput(inputKey) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false).also { it.consume() }
+        onPressedChanged(true)
+        onPressed()
+        try {
+            withTimeout(viewConfiguration.longPressTimeoutMillis) {
+                waitForUpOrCancellation()?.consume()
+            }
+        } catch (_: PointerEventTimeoutCancellationException) {
+            onLongPressed()
+            waitForUpOrCancellation()?.consume()
+        }
+        onPressedChanged(false)
+        onReleased()
+    }
+}
+
 @Composable
 fun RowScope.IconKey(
     @DrawableRes drawable: Int,
@@ -96,18 +124,13 @@ fun RowScope.IconKey(
         modifier = Modifier
             .width(width)
             .fillMaxHeight()
-            .pointerInput(key) {
-                detectTapGestures(
-                    onPress = {
-                        pressed = true
-                        callback.onSpecialKeyPressed(key)
-                        tryAwaitRelease()
-                        pressed = false
-                        callback.onSpecialKeyReleased(key)
-                    },
-                    onLongPress = { callback.onSpecialKeyLongPressed(key) },
-                )
-            }
+            .keyInput(
+                inputKey = key,
+                onPressed = { callback.onSpecialKeyPressed(key) },
+                onReleased = { callback.onSpecialKeyReleased(key) },
+                onLongPressed = { callback.onSpecialKeyLongPressed(key) },
+                onPressedChanged = { pressed = it }
+            )
             .then(modifier),
         contentAlignment = Alignment.Center
     ) {
@@ -134,18 +157,13 @@ fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp) {
             .fillMaxHeight()
             .width(width)
             .padding(bottom = 6.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        pressed = true
-                        callback.onSpecialKeyPressed(SpecialKey.Space)
-                        tryAwaitRelease()
-                        pressed = false
-                        callback.onSpecialKeyReleased(SpecialKey.Space)
-                    },
-                    onLongPress = { callback.onSpecialKeyLongPressed(SpecialKey.Space) },
-                )
-            }
+            .keyInput(
+                inputKey = Unit,
+                onPressed = { callback.onSpecialKeyPressed(SpecialKey.Space) },
+                onReleased = { callback.onSpecialKeyReleased(SpecialKey.Space) },
+                onLongPressed = { callback.onSpecialKeyLongPressed(SpecialKey.Space) },
+                onPressedChanged = { pressed = it }
+            )
             .graphicsLayer {
                 val isPressed = pressed  // state read happens at draw time
                 scaleX = if (isPressed) 1.1f else 1f
@@ -195,18 +213,13 @@ fun RowScope.Key(
         modifier = Modifier
             .width(width)
             .fillMaxHeight()
-            .pointerInput(code) {
-                detectTapGestures(
-                    onPress = {
-                        pressed = true
-                        onPressed()
-                        tryAwaitRelease()
-                        pressed = false
-                        onReleased()
-                    },
-                    onLongPress = { onLongPressed() },
-                )
-            },
+            .keyInput(
+                inputKey = code,
+                onPressed = onPressed,
+                onReleased = onReleased,
+                onLongPressed = onLongPressed,
+                onPressedChanged = { pressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -236,18 +249,13 @@ fun RowScope.MultiLabelKey(
         modifier = Modifier
             .width(ICON_KEY_WIDTH_DP.dp)
             .fillMaxHeight()
-            .pointerInput(labelText) {
-                detectTapGestures(
-                    onPress = {
-                        pressed = true
-                        callback.onSpecialKeyPressed(key)
-                        tryAwaitRelease()
-                        pressed = false
-                        callback.onSpecialKeyReleased(key)
-                    },
-                    onLongPress = { callback.onSpecialKeyLongPressed(key) },
-                )
-            },
+            .keyInput(
+                inputKey = labelText,
+                onPressed = { callback.onSpecialKeyPressed(key) },
+                onReleased = { callback.onSpecialKeyReleased(key) },
+                onLongPressed = { callback.onSpecialKeyLongPressed(key) },
+                onPressedChanged = { pressed = it }
+            ),
         contentAlignment = BiasAlignment(-0.2f, 0.2f)
     ) {
         Text(
@@ -388,7 +396,7 @@ fun ColumnScope.FinalRow(
     }
 }
 
-private val previewCallback = object : Lp3KeyboardCallback {
+internal val previewCallback = object : Lp3KeyboardCallback {
     override fun onKeyPressed(code: Int) = Unit
     override fun onSpecialKeyPressed(key: SpecialKey) = Unit
     override fun onKeyReleased(code: Int) = Unit

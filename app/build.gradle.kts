@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.thelightphone.lp3keyboard"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.thelightphone.lp3keyboard"
         minSdk = 33
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.0.5"
 
