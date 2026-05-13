@@ -3,6 +3,7 @@ package com.thelightphone.lp3Keyboard.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -59,11 +63,11 @@ interface Lp3KeyboardCallback {
 }
 
 const val LP3_KEYBOARD_HEIGHT_DP = 164
-const val STANDARD_KEY_WIDTH_DP = 34
+const val STANDARD_KEY_WIDTH_DP = 35
 const val ICON_KEY_WIDTH_DP = STANDARD_KEY_WIDTH_DP + 14
 const val MEDIUM_KEY_WIDTH_DP = STANDARD_KEY_WIDTH_DP + 8
-const val STANDARD_ROW_HEIGHT_DP = 42
-const val STANDARD_KEY_TEXT_SP = 24
+const val STANDARD_ROW_HEIGHT_DP = 44
+const val STANDARD_KEY_TEXT_SP = 25
 
 @Composable
 fun Lp3Keyboard(layout: Layout, options: KeyboardOptions, callback: Lp3KeyboardCallback) {
@@ -87,6 +91,7 @@ fun RowScope.IconKey(
     modifier: Modifier = Modifier,
     width: Dp = STANDARD_KEY_WIDTH_DP.dp
 ) {
+    var pressed by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .width(width)
@@ -94,8 +99,10 @@ fun RowScope.IconKey(
             .pointerInput(key) {
                 detectTapGestures(
                     onPress = {
+                        pressed = true
                         callback.onSpecialKeyPressed(key)
                         tryAwaitRelease()
+                        pressed = false
                         callback.onSpecialKeyReleased(key)
                     },
                     onLongPress = { callback.onSpecialKeyLongPressed(key) },
@@ -107,7 +114,13 @@ fun RowScope.IconKey(
         Icon(
             painterResource(drawable),
             contentDescription = "TODO",
-            tint = LocalKeyboardColors.current.foreground
+            tint = LocalKeyboardColors.current.foreground,
+            modifier = Modifier.graphicsLayer {
+                val isPressed = pressed  // state read happens at draw time
+                scaleX = if (isPressed) 1.25f else 1f
+                scaleY = if (isPressed) 1.25f else 1f
+                translationY = if (isPressed) -12.dp.toPx() else 0f
+            }
         )
     }
 }
@@ -115,6 +128,7 @@ fun RowScope.IconKey(
 
 @Composable
 fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp) {
+    var pressed by remember { mutableStateOf(false) }
     Box(
         Modifier
             .fillMaxHeight()
@@ -123,12 +137,20 @@ fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp) {
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
+                        pressed = true
                         callback.onSpecialKeyPressed(SpecialKey.Space)
                         tryAwaitRelease()
+                        pressed = false
                         callback.onSpecialKeyReleased(SpecialKey.Space)
                     },
                     onLongPress = { callback.onSpecialKeyLongPressed(SpecialKey.Space) },
                 )
+            }
+            .graphicsLayer {
+                val isPressed = pressed  // state read happens at draw time
+                scaleX = if (isPressed) 1.1f else 1f
+                scaleY = if (isPressed) 1.1f else 1f
+                translationY = if (isPressed) -8.dp.toPx() else 0f
             }
     ) {
         Box(
@@ -209,6 +231,7 @@ fun RowScope.MultiLabelKey(
     key: SpecialKey,
     callback: Lp3KeyboardCallback
 ) {
+    var pressed by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .width(ICON_KEY_WIDTH_DP.dp)
@@ -216,14 +239,16 @@ fun RowScope.MultiLabelKey(
             .pointerInput(labelText) {
                 detectTapGestures(
                     onPress = {
+                        pressed = true
                         callback.onSpecialKeyPressed(key)
                         tryAwaitRelease()
+                        pressed = false
                         callback.onSpecialKeyReleased(key)
                     },
                     onLongPress = { callback.onSpecialKeyLongPressed(key) },
                 )
             },
-        contentAlignment = Alignment.Center
+        contentAlignment = BiasAlignment(-0.2f, 0.2f)
     ) {
         Text(
             text = labelText,
@@ -231,7 +256,14 @@ fun RowScope.MultiLabelKey(
             fontFamily = akkuratFamily,
             fontWeight = FontWeight.Normal,
             letterSpacing = 2.sp,
-            fontSize = 16.sp
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.graphicsLayer {
+                val isPressed = pressed  // state read happens at draw time
+                scaleX = if (isPressed) 1.25f else 1f
+                scaleY = if (isPressed) 1.25f else 1f
+                translationY = if (isPressed) -12.dp.toPx() else 0f
+            }
         )
     }
 }
@@ -312,7 +344,7 @@ fun ColumnScope.FinalRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp)
+            .padding(top = 2.dp)
             .height((STANDARD_ROW_HEIGHT_DP - 20).dp),
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -324,19 +356,19 @@ fun ColumnScope.FinalRow(
                 SpecialKey.Emojis,
                 callback,
                 width = iconKeyWidth.dp,
-                modifier = Modifier.padding(horizontal = 6.dp).padding(end = 14.dp)
+                modifier = Modifier.padding(start = 5.dp, end = 6.5.dp).padding(end = 16.dp)
             )
         } else {
             Spacer(Modifier.width(iconKeyWidth.dp))
         }
-        SpaceBar(callback, 155.dp)
+        SpaceBar(callback, 160.dp)
         if (options.displayReturn) {
             IconKey(
                 R.drawable.return_lp3,
                 SpecialKey.Return,
                 callback,
                 width = iconKeyWidth.dp,
-                modifier = Modifier.padding(top = 10.dp, start = 22.dp, end = 0.dp)
+                modifier = Modifier.padding(top = 4.dp, start = 20.dp, end = 0.dp)
             )
         } else {
             Spacer(Modifier.width(iconKeyWidth.dp))
@@ -348,7 +380,7 @@ fun ColumnScope.FinalRow(
                 SpecialKey.Voice,
                 callback,
                 width = iconKeyWidth.dp,
-                modifier = Modifier.padding(top = 2.dp, start = 14.dp, end = 4.dp)
+                modifier = Modifier.padding(top = 2.dp, start = 12.dp, end = 4.dp)
             )
         } else {
             Spacer(Modifier.width(iconKeyWidth.dp))

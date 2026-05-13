@@ -45,9 +45,9 @@ class DefaultLp3KeyboardViewModel(
     override val optionsFlow: StateFlow<KeyboardOptions> = MutableStateFlow(
         KeyboardOptions(
             defaultEmojis,
-            true,
-            true,
-            true
+            displayClose = true,
+            displayReturn = true,
+            displayVoice = true
         )
     )
 
