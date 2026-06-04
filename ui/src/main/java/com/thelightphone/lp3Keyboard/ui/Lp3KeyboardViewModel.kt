@@ -50,7 +50,8 @@ interface Lp3RepeatableKeyboardCallback : Lp3KeyboardCallback {
 
 class DefaultLp3KeyboardViewModel(
     private val delegateCallback: Lp3RepeatableKeyboardCallback,
-    private val haptic: () -> Unit = {}
+    private val haptic: () -> Unit = {},
+    private val showCloseButtonForLayout: (Layout) -> Boolean = { true }
 ) : ViewModel(),
     Lp3KeyboardViewModel {
     var previousLayout: Layout? = null
@@ -60,10 +61,11 @@ class DefaultLp3KeyboardViewModel(
 
     private fun setLayout(layout: Layout) {
         previousLayout = layoutFlow.value
+        optionsFlow.value = optionsFlow.value.copy(displayClose = showCloseButtonForLayout(layout))
         layoutFlow.value = layout
     }
 
-    override val optionsFlow: StateFlow<KeyboardOptions> = MutableStateFlow(
+    override val optionsFlow = MutableStateFlow(
         KeyboardOptions(
             defaultEmojis,
             displayClose = true,
@@ -85,6 +87,7 @@ class DefaultLp3KeyboardViewModel(
         heldKeys.values.forEach { it.cancel() }
         heldKeys.clear()
     }
+
     var capsMode: CapsMode = CapsMode.Off
         private set
 
