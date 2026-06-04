@@ -8,7 +8,7 @@ plugins {
 }
 
 // for publishing
-val uiVersion = "0.0.5"
+val uiVersion = "0.0.6"
 
 android {
     namespace = "com.thelightphone.lp3Keyboard.ui"
