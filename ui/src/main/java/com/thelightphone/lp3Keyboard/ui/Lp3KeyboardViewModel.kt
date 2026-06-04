@@ -16,7 +16,7 @@ interface Lp3KeyboardViewModel : Lp3KeyboardCallback {
 
 val defaultEmojis = listOf(
     "😅",
-    "😅",
+    "☺️",
     "🙃",
     "😍",
     "😜",
@@ -51,13 +51,14 @@ interface Lp3RepeatableKeyboardCallback : Lp3KeyboardCallback {
 class DefaultLp3KeyboardViewModel(
     private val delegateCallback: Lp3RepeatableKeyboardCallback,
     private val haptic: () -> Unit = {},
-    private val showCloseButtonForLayout: (Layout) -> Boolean = { true }
+    private val showCloseButtonForLayout: (Layout) -> Boolean = { true },
+    initialLayout: Layout = LowerCaseLayout
 ) : ViewModel(),
     Lp3KeyboardViewModel {
     var previousLayout: Layout? = null
         private set
 
-    override val layoutFlow: MutableStateFlow<Layout> = MutableStateFlow(LowerCaseLayout)
+    override val layoutFlow: MutableStateFlow<Layout> = MutableStateFlow(initialLayout)
 
     private fun setLayout(layout: Layout) {
         previousLayout = layoutFlow.value
@@ -68,14 +69,14 @@ class DefaultLp3KeyboardViewModel(
     override val optionsFlow = MutableStateFlow(
         KeyboardOptions(
             defaultEmojis,
-            displayClose = true,
+            displayClose = showCloseButtonForLayout(initialLayout),
             displayReturn = true,
             displayVoice = true
         )
     )
 
     companion object {
-        private const val REPEAT_INTERVAL_MS = 500L
+        private const val REPEAT_INTERVAL_MS = 350L
     }
 
     private val heldSpecialKeys = mutableMapOf<SpecialKey, Job>()
