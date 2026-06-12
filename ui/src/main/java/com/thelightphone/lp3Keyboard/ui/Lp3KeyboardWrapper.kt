@@ -32,12 +32,18 @@ Eventually, we will replace the custom UI in LightOS with this, so we have a sin
 @Composable
 fun Lp3KeyboardWrapper(viewModel: Lp3KeyboardViewModel) {
     val layout by viewModel.layoutFlow.collectAsState()
-    val options by viewModel.optionsFlow.collectAsState()
-    Lp3KeyboardWrapper(layout, options, viewModel)
+    val keyboardOptions by viewModel.keyboardOptionsFlow.collectAsState()
+    val layoutOptions by viewModel.layoutOptionsFlow.collectAsState()
+    Lp3KeyboardWrapper(layout, keyboardOptions, layoutOptions, viewModel)
 }
 
 @Composable
-fun Lp3KeyboardWrapper(layout: Layout, options: KeyboardOptions, callback: Lp3KeyboardCallback) {
+fun Lp3KeyboardWrapper(
+    layout: Layout,
+    keyboardOptions: KeyboardOptions,
+    layoutOptions: LayoutOptions,
+    callback: Lp3KeyboardCallback
+) {
     val colors = LocalKeyboardColors.current
     Column(
         modifier = Modifier
@@ -46,12 +52,12 @@ fun Lp3KeyboardWrapper(layout: Layout, options: KeyboardOptions, callback: Lp3Ke
             .background(colors.background)
             .padding(top = 10.dp)
     ) {
-        Lp3Keyboard(layout, options, callback)
+        Lp3Keyboard(layout, keyboardOptions, callback)
         Row(
             Modifier.weight(1f).fillMaxWidth().background(colors.background),
             horizontalArrangement = Arrangement.Center
         ) {
-            if (options.displayClose) {
+            if (layoutOptions.displayCloseButton) {
                 Button(
                     onClick = { callback.onSpecialKeyReleased(SpecialKey.Close) },
                     contentPadding = PaddingValues(bottom = 10.dp, top = 4.dp),
@@ -75,13 +81,14 @@ fun Lp3KeyboardWrapper(layout: Layout, options: KeyboardOptions, callback: Lp3Ke
 fun Lp3KeyboardWrapperPreview() {
     Lp3KeyboardTheme(DarkKeyboardColors) {
         Column(verticalArrangement = Arrangement.Bottom, modifier = Modifier.fillMaxSize()) {
-            val options = KeyboardOptions(
+            val keyboardOptions = KeyboardOptions(
                 defaultEmojis,
-                displayClose = true,
                 displayReturn = true,
-                displayVoice = true
+                displayVoice = true,
+                enableKeyAnimation = true
             )
-            Lp3KeyboardWrapper(UpperCaseLayout, options, previewCallback)
+            val layoutOptions = LayoutOptions(displayCloseButton = true)
+            Lp3KeyboardWrapper(UpperCaseLayout, keyboardOptions, layoutOptions, previewCallback)
         }
     }
 }

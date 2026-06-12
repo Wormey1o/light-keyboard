@@ -22,19 +22,20 @@ object LowerCaseLayout : Layout {
         options: KeyboardOptions,
         callback: Lp3KeyboardCallback
     ) {
-        FirstRow("qwertyuiop", callback)
-        SecondRow("asdfghjkl", callback)
-        ThirdRow("zxcvbnm", callback) {
+        FirstRow("qwertyuiop", callback, options.enableKeyAnimation)
+        SecondRow("asdfghjkl", callback, options.enableKeyAnimation)
+        ThirdRow("zxcvbnm", callback, options) {
             IconKey(
                 R.drawable.up_lp3,
                 SpecialKey.UpCase,
                 callback,
+                options.enableKeyAnimation,
                 width = ICON_KEY_WIDTH_DP.dp,
                 modifier = Modifier.padding(12.dp).padding(bottom = 6.dp, end = 8.dp)
             )
         }
         FinalRow(options, callback) {
-            MultiLabelKey("123", SpecialKey.Numbers, callback)
+            MultiLabelKey("123", SpecialKey.Numbers, callback, options.enableKeyAnimation)
         }
     }
 }
@@ -47,19 +48,20 @@ object CapsLockedLayout : Layout {
         options: KeyboardOptions,
         callback: Lp3KeyboardCallback
     ) {
-        FirstRow("QWERTYUIOP", callback)
-        SecondRow("ASDFGHJKL", callback)
-        ThirdRow("ZXCVBNM", callback) {
+        FirstRow("QWERTYUIOP", callback, options.enableKeyAnimation)
+        SecondRow("ASDFGHJKL", callback, options.enableKeyAnimation)
+        ThirdRow("ZXCVBNM", callback, options) {
             IconKey(
                 R.drawable.caps_lp3,
                 SpecialKey.DownCase,
                 callback,
+                options.enableKeyAnimation,
                 width = ICON_KEY_WIDTH_DP.dp,
                 modifier = Modifier.padding(9.dp).padding(bottom = 2.dp, end = 4.dp)
             )
         }
         FinalRow(options, callback) {
-            MultiLabelKey("123", SpecialKey.Numbers, callback)
+            MultiLabelKey("123", SpecialKey.Numbers, callback, options.enableKeyAnimation)
         }
     }
 }
@@ -72,19 +74,20 @@ object UpperCaseLayout : Layout {
         options: KeyboardOptions,
         callback: Lp3KeyboardCallback
     ) {
-        FirstRow("QWERTYUIOP", callback)
-        SecondRow("ASDFGHJKL", callback)
-        ThirdRow("ZXCVBNM", callback) {
+        FirstRow("QWERTYUIOP", callback, options.enableKeyAnimation)
+        SecondRow("ASDFGHJKL", callback, options.enableKeyAnimation)
+        ThirdRow("ZXCVBNM", callback, options) {
             IconKey(
                 R.drawable.down_lp3,
                 SpecialKey.DownCase,
                 callback,
+                options.enableKeyAnimation,
                 width = ICON_KEY_WIDTH_DP.dp,
                 modifier = Modifier.padding(12.dp).padding(bottom = 6.dp, end = 8.dp)
             )
         }
         FinalRow(options, callback) {
-            MultiLabelKey("123", SpecialKey.Numbers, callback)
+            MultiLabelKey("123", SpecialKey.Numbers, callback, options.enableKeyAnimation)
         }
     }
 }
@@ -95,13 +98,13 @@ object NumberLayout : Layout {
         options: KeyboardOptions,
         callback: Lp3KeyboardCallback
     ) {
-        FirstRow("1234567890", callback)
-        SecondRow("-/:;()$&@\"", callback)
-        ThirdRow(".,?!'", callback) {
-            MultiLabelKey("#+=", SpecialKey.Symbols, callback)
+        FirstRow("1234567890", callback, options.enableKeyAnimation)
+        SecondRow("-/:;()$&@\"", callback, options.enableKeyAnimation)
+        ThirdRow(".,?!'", callback, options) {
+            MultiLabelKey("#+=", SpecialKey.Symbols, callback, options.enableKeyAnimation)
         }
         FinalRow(options, callback) {
-            MultiLabelKey("ABC", SpecialKey.Letters, callback)
+            MultiLabelKey("ABC", SpecialKey.Letters, callback, options.enableKeyAnimation)
         }
     }
 }
@@ -112,13 +115,13 @@ object SymbolsLayout : Layout {
         options: KeyboardOptions,
         callback: Lp3KeyboardCallback
     ) {
-        FirstRow("[]{}#%^*+=", callback)
-        SecondRow("_\\|~<>€£¥", callback)
-        ThirdRow(".,?!'", callback) {
-            MultiLabelKey("123", SpecialKey.Numbers, callback)
+        FirstRow("[]{}#%^*+=", callback, options.enableKeyAnimation)
+        SecondRow("_\\|~<>€£¥", callback, options.enableKeyAnimation)
+        ThirdRow(".,?!'", callback, options) {
+            MultiLabelKey("123", SpecialKey.Numbers, callback, options.enableKeyAnimation)
         }
         FinalRow(options, callback) {
-            MultiLabelKey("ABC", SpecialKey.Letters, callback)
+            MultiLabelKey("ABC", SpecialKey.Letters, callback, options.enableKeyAnimation)
         }
     }
 }
@@ -134,7 +137,7 @@ object EmojiLayout : Layout {
         for (row in emojiRows) {
             DefaultRow {
                 for (emoji in row) {
-                    Key(emoji, callback, width = MEDIUM_KEY_WIDTH_DP.dp)
+                    Key(emoji, callback, options.enableKeyAnimation, width = MEDIUM_KEY_WIDTH_DP.dp)
                 }
             }
         }
@@ -151,7 +154,7 @@ class ExtendedCharKeyboard(rootCode: Int) : Layout {
         rows?.forEach { rowKeys ->
             DefaultRow {
                 for (char in rowKeys) {
-                    Key(char.code, callback, width = MEDIUM_KEY_WIDTH_DP.dp)
+                    Key(char.code, callback, options.enableKeyAnimation, width = MEDIUM_KEY_WIDTH_DP.dp)
                 }
             }
         }

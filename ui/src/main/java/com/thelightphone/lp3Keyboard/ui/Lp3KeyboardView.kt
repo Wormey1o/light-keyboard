@@ -14,9 +14,9 @@ open class Lp3RawKeyboardView @JvmOverloads constructor(
 ) : AbstractComposeView(context, attrs) {
     var displayEmojis: Boolean by mutableStateOf(false)
     var callback: Lp3KeyboardCallback? by mutableStateOf(null)
-    var displayClose: Boolean by mutableStateOf(false)
     var displayReturn: Boolean by mutableStateOf(false)
     var displayVoice: Boolean by mutableStateOf(false)
+    var enableKeyAnimation: Boolean by mutableStateOf(true)
     var emojis: List<Emoji>? by mutableStateOf(defaultEmojis)
     var layout: Layout by mutableStateOf(LowerCaseLayout)
     var darkMode: Boolean by mutableStateOf(true)
@@ -29,9 +29,9 @@ open class Lp3RawKeyboardView @JvmOverloads constructor(
                 this@Lp3RawKeyboardView.layout,
                 KeyboardOptions(
                     emojis = if (displayEmojis) this@Lp3RawKeyboardView.emojis else emptyList(),
-                    displayClose = this@Lp3RawKeyboardView.displayClose,
                     displayReturn = this@Lp3RawKeyboardView.displayReturn,
-                    displayVoice = this@Lp3RawKeyboardView.displayVoice
+                    displayVoice = this@Lp3RawKeyboardView.displayVoice,
+                    enableKeyAnimation = this@Lp3RawKeyboardView.enableKeyAnimation
                 ),
                 cb
             )

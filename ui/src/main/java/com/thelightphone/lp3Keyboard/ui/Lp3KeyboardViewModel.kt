@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 
 interface Lp3KeyboardViewModel : Lp3KeyboardCallback {
     val layoutFlow: StateFlow<Layout>
-    val optionsFlow: StateFlow<KeyboardOptions>
+    val keyboardOptionsFlow: StateFlow<KeyboardOptions>
+    val layoutOptionsFlow: StateFlow<LayoutOptions>
 }
 
 val defaultEmojis = listOf(
@@ -51,8 +52,20 @@ interface Lp3RepeatableKeyboardCallback : Lp3KeyboardCallback {
 class DefaultLp3KeyboardViewModel(
     private val delegateCallback: Lp3RepeatableKeyboardCallback,
     private val haptic: () -> Unit = {},
-    private val showCloseButtonForLayout: (Layout) -> Boolean = { true },
-    initialLayout: Layout = LowerCaseLayout
+    initialLayout: Layout = LowerCaseLayout,
+    private val optionsForLayout: (Layout) -> LayoutOptions = {
+        LayoutOptions(
+            displayCloseButton = true
+        )
+    },
+    override val keyboardOptionsFlow: StateFlow<KeyboardOptions> = MutableStateFlow(
+        KeyboardOptions(
+            defaultEmojis,
+            displayReturn = true,
+            displayVoice = true,
+            enableKeyAnimation = true
+        )
+    )
 ) : ViewModel(),
     Lp3KeyboardViewModel {
     var previousLayout: Layout? = null
@@ -62,18 +75,11 @@ class DefaultLp3KeyboardViewModel(
 
     private fun setLayout(layout: Layout) {
         previousLayout = layoutFlow.value
-        optionsFlow.value = optionsFlow.value.copy(displayClose = showCloseButtonForLayout(layout))
+        layoutOptionsFlow.value = optionsForLayout(layout)
         layoutFlow.value = layout
     }
 
-    override val optionsFlow = MutableStateFlow(
-        KeyboardOptions(
-            defaultEmojis,
-            displayClose = showCloseButtonForLayout(initialLayout),
-            displayReturn = true,
-            displayVoice = true
-        )
-    )
+    override val layoutOptionsFlow = MutableStateFlow(optionsForLayout(initialLayout))
 
     companion object {
         private const val REPEAT_INTERVAL_MS = 350L

@@ -116,6 +116,7 @@ fun RowScope.IconKey(
     @DrawableRes drawable: Int,
     key: SpecialKey,
     callback: Lp3KeyboardCallback,
+    enableKeyAnimation: Boolean,
     modifier: Modifier = Modifier,
     width: Dp = STANDARD_KEY_WIDTH_DP.dp
 ) {
@@ -138,19 +139,25 @@ fun RowScope.IconKey(
             painterResource(drawable),
             contentDescription = "TODO",
             tint = LocalKeyboardColors.current.foreground,
-            modifier = Modifier.graphicsLayer {
-                val isPressed = pressed  // state read happens at draw time
-                scaleX = if (isPressed) 1.25f else 1f
-                scaleY = if (isPressed) 1.25f else 1f
-                translationY = if (isPressed) -12.dp.toPx() else 0f
-            }
+            modifier = Modifier.then(
+                if (enableKeyAnimation) {
+                    Modifier.graphicsLayer {
+                        val isPressed = pressed
+                        scaleX = if (isPressed) 1.25f else 1f
+                        scaleY = if (isPressed) 1.25f else 1f
+                        translationY = if (isPressed) -12.dp.toPx() else 0f
+                    }
+                } else {
+                    Modifier
+                }
+            )
         )
     }
 }
 
 
 @Composable
-fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp) {
+fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp, enableKeyAnimation: Boolean) {
     var pressed by remember { mutableStateOf(false) }
     Box(
         Modifier
@@ -163,13 +170,18 @@ fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp) {
                 onReleased = { callback.onSpecialKeyReleased(SpecialKey.Space) },
                 onLongPressed = { callback.onSpecialKeyLongPressed(SpecialKey.Space) },
                 onPressedChanged = { pressed = it }
+            ).then(
+                if (enableKeyAnimation) {
+                    Modifier.graphicsLayer {
+                        val isPressed = pressed
+                        scaleX = if (isPressed) 1.1f else 1f
+                        scaleY = if (isPressed) 1.1f else 1f
+                        translationY = if (isPressed) -8.dp.toPx() else 0f
+                    }
+                } else {
+                    Modifier
+                }
             )
-            .graphicsLayer {
-                val isPressed = pressed  // state read happens at draw time
-                scaleX = if (isPressed) 1.1f else 1f
-                scaleY = if (isPressed) 1.1f else 1f
-                translationY = if (isPressed) -8.dp.toPx() else 0f
-            }
     ) {
         Box(
             Modifier
@@ -185,13 +197,15 @@ fun RowScope.SpaceBar(callback: Lp3KeyboardCallback, width: Dp) {
 fun RowScope.Key(
     char: Char,
     callback: Lp3KeyboardCallback,
+    enableKeyAnimation: Boolean,
     override: SpecialKey? = null
-) = Key(char.code, callback, override)
+) = Key(char.code, callback, enableKeyAnimation, override)
 
 @Composable
 fun RowScope.Key(
     code: Int,
     callback: Lp3KeyboardCallback,
+    enableKeyAnimation: Boolean,
     override: SpecialKey? = null,
     width: Dp = STANDARD_KEY_WIDTH_DP.dp
 ) {
@@ -228,12 +242,18 @@ fun RowScope.Key(
             fontFamily = akkuratFamily,
             fontWeight = FontWeight.Normal,
             fontSize = STANDARD_KEY_TEXT_SP.sp,
-            modifier = Modifier.graphicsLayer {
-                val isPressed = pressed  // state read happens at draw time
-                scaleX = if (isPressed) 1.25f else 1f
-                scaleY = if (isPressed) 1.25f else 1f
-                translationY = if (isPressed) -12.dp.toPx() else 0f
-            }
+            modifier = Modifier.then(
+                if (enableKeyAnimation) {
+                    Modifier.graphicsLayer {
+                        val isPressed = pressed
+                        scaleX = if (isPressed) 1.25f else 1f
+                        scaleY = if (isPressed) 1.25f else 1f
+                        translationY = if (isPressed) -12.dp.toPx() else 0f
+                    }
+                } else {
+                    Modifier
+                }
+            )
         )
     }
 }
@@ -242,7 +262,8 @@ fun RowScope.Key(
 fun RowScope.MultiLabelKey(
     labelText: String,
     key: SpecialKey,
-    callback: Lp3KeyboardCallback
+    callback: Lp3KeyboardCallback,
+    enableKeyAnimation: Boolean
 ) {
     var pressed by remember { mutableStateOf(false) }
     Box(
@@ -266,12 +287,18 @@ fun RowScope.MultiLabelKey(
             letterSpacing = 2.sp,
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.graphicsLayer {
-                val isPressed = pressed  // state read happens at draw time
-                scaleX = if (isPressed) 1.25f else 1f
-                scaleY = if (isPressed) 1.25f else 1f
-                translationY = if (isPressed) -12.dp.toPx() else 0f
-            }
+            modifier = Modifier.then(
+                if (enableKeyAnimation) {
+                    Modifier.graphicsLayer {
+                        val isPressed = pressed  // state read happens at draw time
+                        scaleX = if (isPressed) 1.25f else 1f
+                        scaleY = if (isPressed) 1.25f else 1f
+                        translationY = if (isPressed) -12.dp.toPx() else 0f
+                    }
+                } else {
+                    Modifier
+                }
+            )
         )
     }
 }
@@ -280,9 +307,13 @@ typealias Emoji = Int
 
 data class KeyboardOptions(
     val emojis: List<Emoji>?,
-    val displayClose: Boolean,
     val displayReturn: Boolean,
-    val displayVoice: Boolean
+    val displayVoice: Boolean,
+    val enableKeyAnimation: Boolean
+)
+
+data class LayoutOptions(
+    val displayCloseButton: Boolean
 )
 
 @Composable
@@ -301,24 +332,25 @@ fun ColumnScope.DefaultRow(
 
 
 @Composable
-fun ColumnScope.FirstRow(characters: String, callback: Lp3KeyboardCallback) {
+fun ColumnScope.FirstRow(characters: String, callback: Lp3KeyboardCallback, enableKeyAnimation: Boolean) {
     DefaultRow {
         for (char in characters) {
-            Key(char, callback)
+            Key(char, callback, enableKeyAnimation)
         }
     }
 }
 
 @Composable
-fun ColumnScope.SecondRow(characters: String, callback: Lp3KeyboardCallback) {
+fun ColumnScope.SecondRow(characters: String, callback: Lp3KeyboardCallback, enableKeyAnimation: Boolean) {
     // same style as first row on all keyboards
-    FirstRow(characters, callback)
+    FirstRow(characters, callback, enableKeyAnimation)
 }
 
 @Composable
 fun ColumnScope.ThirdRow(
     characters: String,
     callback: Lp3KeyboardCallback,
+    keyboardOptions: KeyboardOptions,
     leftButton: @Composable RowScope.() -> Unit
 ) {
     DefaultRow {
@@ -328,7 +360,7 @@ fun ColumnScope.ThirdRow(
             Spacer(Modifier.width(MEDIUM_KEY_WIDTH_DP.dp))
         }
         for (char in characters) {
-            Key(char, callback)
+            Key(char, callback, keyboardOptions.enableKeyAnimation)
         }
         if (characters.length == 5) {
             Spacer(Modifier.width(STANDARD_KEY_WIDTH_DP.dp))
@@ -337,6 +369,7 @@ fun ColumnScope.ThirdRow(
             R.drawable.back_lp3,
             SpecialKey.Backspace,
             callback,
+            keyboardOptions.enableKeyAnimation,
             width = ICON_KEY_WIDTH_DP.dp,
             modifier = Modifier.padding(10.dp).padding(start = 8.dp, bottom = 6.dp)
         )
@@ -363,18 +396,20 @@ fun ColumnScope.FinalRow(
                 R.drawable.smile,
                 SpecialKey.Emojis,
                 callback,
+                options.enableKeyAnimation,
                 width = iconKeyWidth.dp,
                 modifier = Modifier.padding(start = 5.dp, end = 6.5.dp).padding(end = 16.dp)
             )
         } else {
             Spacer(Modifier.width(iconKeyWidth.dp))
         }
-        SpaceBar(callback, 160.dp)
+        SpaceBar(callback, 160.dp, options.enableKeyAnimation)
         if (options.displayReturn) {
             IconKey(
                 R.drawable.return_lp3,
                 SpecialKey.Return,
                 callback,
+                options.enableKeyAnimation,
                 width = iconKeyWidth.dp,
                 modifier = Modifier.padding(top = 4.dp, start = 20.dp, end = 0.dp)
             )
@@ -387,6 +422,7 @@ fun ColumnScope.FinalRow(
                 R.drawable.microphone_lp3,
                 SpecialKey.Voice,
                 callback,
+                options.enableKeyAnimation,
                 width = iconKeyWidth.dp,
                 modifier = Modifier.padding(top = 2.dp, start = 12.dp, end = 4.dp)
             )
@@ -410,8 +446,13 @@ internal val previewCallback = object : Lp3KeyboardCallback {
 fun Lp3KeyboardDarkPreview() {
     Lp3KeyboardTheme(DarkKeyboardColors) {
         Column(verticalArrangement = Arrangement.Bottom, modifier = Modifier.fillMaxSize()) {
-            val options = KeyboardOptions(defaultEmojis, true, true, true)
-            Lp3KeyboardWrapper(EmojiLayout, options, previewCallback)
+            val keyboardOptions = KeyboardOptions(defaultEmojis,
+                displayReturn = true,
+                displayVoice = true,
+                enableKeyAnimation = true
+            )
+            val layoutOptions = LayoutOptions(displayCloseButton = true)
+            Lp3KeyboardWrapper(EmojiLayout, keyboardOptions, layoutOptions, previewCallback)
         }
     }
 }
@@ -421,8 +462,13 @@ fun Lp3KeyboardDarkPreview() {
 fun Lp3KeyboardLightPreview() {
     Lp3KeyboardTheme(LightKeyboardColors) {
         Column(verticalArrangement = Arrangement.Bottom, modifier = Modifier.fillMaxSize()) {
-            val options = KeyboardOptions(defaultEmojis, true, true, true)
-            Lp3KeyboardWrapper(UpperCaseLayout, options, previewCallback)
+            val keyboardOptions = KeyboardOptions(defaultEmojis,
+                displayReturn = true,
+                displayVoice = true,
+                enableKeyAnimation = true
+            )
+            val layoutOptions = LayoutOptions(displayCloseButton = true)
+            Lp3KeyboardWrapper(UpperCaseLayout, keyboardOptions, layoutOptions, previewCallback)
         }
     }
 }

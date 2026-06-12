@@ -8,7 +8,7 @@ plugins {
 }
 
 // for publishing
-val uiVersion = "0.0.9"
+val uiVersion = providers.gradleProperty("projectVersion").get()
 
 android {
     namespace = "com.thelightphone.lp3Keyboard.ui"
