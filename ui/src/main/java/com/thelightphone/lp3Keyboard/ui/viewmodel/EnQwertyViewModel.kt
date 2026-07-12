@@ -90,11 +90,6 @@ class EnQwertyLp3KeyboardViewModel<SwipeResult>(
 
     override fun onKeyPressed(code: Int) {
         haptic()
-        // eagerly drop single-caps so fast typists see lowercase before the IME round-trip
-        if (capsMode == CapsMode.Single) {
-            capsMode = CapsMode.Off
-            showAlphabetLayout()
-        }
         delegateCallback?.onKeyPressed(code)
     }
 
@@ -113,6 +108,17 @@ class EnQwertyLp3KeyboardViewModel<SwipeResult>(
             setLayout(previousLayout ?: LowerCaseLayout)
         }
         delegateCallback?.onKeyReleased(code)
+        // Drop single-caps only after the character has committed, not on press.
+        // Dropping it on press (the original behavior) swapped layoutFlow while this
+        // same key's pointerInput gesture was still awaiting waitForUpOrCancellation(),
+        // which tears down that composable (LowerCaseLayout/UpperCaseLayout are distinct
+        // objects) and cancels the in-flight coroutine -- so onKeyReleased, and the
+        // character it commits, never fired. One-shot shift silently dropped every
+        // capital letter; only CapsMode.Locked worked, since it never hit this branch.
+        if (capsMode == CapsMode.Single) {
+            capsMode = CapsMode.Off
+            showAlphabetLayout()
+        }
     }
 
     override fun onKeyCancelled(code: Int) {
